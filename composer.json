@@ -1,0 +1,15 @@
+{
+    "name": "ferranlopez/pr1carworkshop",
+    "autoload": {
+        "psr-4": {
+            "Ferranlopez\\Pr1carworkshop\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ferran",
+            "email": "pl2023316@365.stucom.com"
+        }
+    ],
+    "require": {}
+}
