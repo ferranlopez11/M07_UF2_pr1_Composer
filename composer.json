@@ -2,7 +2,7 @@
     "name": "ferranlopez/pr1carworkshop",
     "autoload": {
         "psr-4": {
-            "Ferranlopez\\Pr1carworkshop\\": "src/"
+            "App\\": "src/"
         }
     },
     "authors": [
@@ -11,5 +11,7 @@
             "email": "pl2023316@365.stucom.com"
         }
     ],
-    "require": {}
+    "require": {
+        "monolog/monolog": "^3.8"
+    }
 }
