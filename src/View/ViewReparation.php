@@ -24,11 +24,13 @@ class ViewReparation {
         <br>
         <ul>
         <li>ID de reparación: ' . $reparation->getIdReparation() . '</li>
-        <li>ID de la Workshop: </li>
-        <li></li>
-        <li></li>
-        <li></li>
+        <li>ID de la Workshop: ' . $reparation->getIdWorkshop() . '</li>
+        <li>Nombre del taller: ' . $reparation->getNameWorkshop() . '</li>
+        <li>Fecha de registro: ' . $reparation->getRegisterDate() . '</li>
+        <li>Matricula: ' . $reparation->getLicensePlate() . '</li>
         </ul>
+        <br>
+        <img src="data:image/png;base64,' . base64_encode($reparation->getPhotoVehicle()) . '" alt="Image" />
         </body>
         </html>
         ';
@@ -53,25 +55,24 @@ class ViewReparation {
     if (isset($_POST["optionRole"]) && $_POST["optionRole"] == Roles::ROLE_EMPLOYEE) {?>
     <form method="POST" action="../Controller/ControllerReparation.php" name="formSearchReparation" enctype="multipart/form-data">
         <h2>Registrar reparación de coche:</h2>
-        <label for="id_taller">ID del Taller:</label>
-        <input type="text" id="id_taller" name="id_taller" maxlength="4" required><br><br>
+        <label for="workshopId">ID del Taller:</label>
+        <input type="text" id="workshopId" name="workshopId" maxlength="4" required><br><br>
 
-        <label for="nombre_taller">Nombre del Taller:</label>
-        <input type="text" id="nombre_taller" name="nombre_taller" maxlength="12" required><br><br>
+        <label for="workshopName">Nombre del Taller:</label>
+        <input type="text" id="workshopName" name="workshopName" maxlength="12" required><br><br>
 
-        <label for="fecha_registro">Fecha de Registro:</label>
-        <input type="date" id="fecha_registro" name="fecha_registro" required><br><br>
+        <label for="registerDate">Fecha de Registro:</label>
+        <input type="text" id="registerDate" name="registerDate" placeholder="yyyy-mm-dd" pattern="\d{4}-\d{2}-\d{2}" required><br><br>
 
-        <label for="matricula">Matrícula del Vehículo:</label>
-        <input type="text" id="matricula" name="matricula" placeholder="9999-XXX" required><br><br>
+        <label for="licensePlate">Matrícula del Vehículo:</label>
+        <input type="text" id="licensePlate" name="licensePlate" placeholder="9999-XXX" pattern="\d{4}-[A-Za-z]{3}" required><br><br>
 
-        <label for="foto">Foto del Vehículo:</label>
-        <input type="file" id="foto" name="foto" accept="image/*" required><br><br>
+        <label for="photo">Foto del Vehículo:</label>
+        <input type="file" id="photo" name="photo" accept="image/*" required><br><br>
 
-        <input type="submit" value="Registrar" name="insertReparation">
+        <input type="submit" value="create" name="insertReparation">
     </form>
     <?php
     } ?>
 </body>
 </html>
-*/

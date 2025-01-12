@@ -11,38 +11,42 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (isset($_POST["getReparation"])) {
-    getReparation();
+$controller = new ControllerReparation();
+if (isset($_GET["getReparation"])) {
+    $controller->getReparation();
 }
 
 if (isset($_POST["insertReparation"])) {
-    insertReparation();
+    $controller->insertReparation();
 }
 
+class ControllerReparation {
+    function getReparation() {
+        $role = $_SESSION['optionRole'];
+        $idReparation = $_POST['uuid'];
+    
+        $service = new ServiceReparation();
+        $reparation = $service->getReparation($role, $idReparation);
 
-function getReparation() {
-    $role = $_SESSION['optionRole'];
-    $idReparation = $_POST['uuid'];
-
-    $service = new ServiceReparation();
-    $reparation = $service->getReparation(role: $role, $idReparation);
-
-    $view = new ViewReparation();
-    $view->render($reparation);
+    
+        $view = new ViewReparation();
+        $view->render($reparation);
+    }
+    
+    function insertReparation() {
+        $workshopId = $_POST["workshopId"];
+        $workshopName = $_POST["workshopName"];
+        $registerDate = $_POST["registerDate"];
+        $licensePlate = $_POST["licensePlate"];
+    
+        $service = new ServiceReparation();
+        $reparation = $service->insertReparation($workshopId, $workshopName, $registerDate, $licensePlate);
+    
+        $view = new ViewReparation();
+        $view->render($reparation);
+    }
 }
 
-function insertReparation() {
-    $workshopId = $_POST["workshopId"];
-    $workshopName = $_POST["workshopName"];
-    $registerDate = $_POST["registerDate"];
-    $licensePlate = $_POST["licensePlate"];
-
-    $service = new ServiceReparation();
-    $reparation = $service->insertReparation($workshopId, $workshopName, $registerDate, $licensePlate);
-
-    $view = new ViewReparation();
-    $view->render($reparation);
-}
 
 
 /*session_start();

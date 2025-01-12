@@ -3,12 +3,11 @@
 namespace App\Service;
 
 use App\Model\Reparation;
-use App\Database\Database;
-use PDO;
-use PDOException;  // Importar PDOException
-use Monolog\Logger;  // Importar la clase Logger de Monolog
-use Monolog\Handler\StreamHandler;  // Importar el Handler de Monolog
-use Intervention\Image\ImageManagerStatic as Image;
+use App\Config\Roles;
+use Intervention\Image\ImageManager;
+use Ramsey\Uuid\Uuid;
+
+
 
 class ServiceReparation {
     private $db;
@@ -41,6 +40,44 @@ class ServiceReparation {
             $reparation->sethPhotoVehicle($imageObject);
             $reparation->setLicensePlate("XXXX XXX");
         }
+        return $reparation;
+    }
+
+    function insertReparation($workshopId, $workshopName, $registerDate, $licensePlate): Reparation {
+        $uuid4 = Uuid::uuid4();
+
+        $watermarkText = $licensePlate . "+" . $uuid4;
+
+        $managerImage = new \Intervention\Image\ImageManager();
+
+        $imageObject = $managerImage->make($_FILES["photo"]["tmp_name"]);
+        $imageObject->save("../../resources/inputImg/" . $_FILES["photo"]["name"]);
+
+        $imageObject->text($watermarkText, 10, 20, function ($font) {
+            $font->file('../../resources/arial.ttf');
+            $font->size(30);
+            $font->color(array(0, 255, 0, 1));
+            $font->align('left');
+            $font->valign('top');
+        });
+
+        $imageObject->save(path: "../../resources/outputImg/" . $_FILES["photo"]["name"]);
+        $imageData = $imageObject;
+        $imageData = $this->mysqli->real_escape_string($imageData);
+
+        $reparation = new Reparation($uuid4, $workshopId, $workshopName, $registerDate, $licensePlate, $imageObject);
+
+        $sql_sentence = "INSERT INTO reparation(idReparation, idWorkshop, nameWorkshop, registerDate, licensePlate, photoVehicle)
+        VALUES('$uuid4', $workshopId, '$workshopName', '$registerDate', '$licensePlate', '$imageData')";
+        try {
+            $this->mysqli->query($sql_sentence);
+            $this->log->info("Record inserted successfully");
+        } catch (\Throwable $th) {
+            $this->log->error("Error inserting a record" . $th->getMessage());
+        }
+        $this->mysqli->close();
+
+        return $reparation;
     }
 
 
