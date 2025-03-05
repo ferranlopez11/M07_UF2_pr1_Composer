@@ -11,7 +11,7 @@ class Reparation {
     private $foto_path;
 
     public function __construct($data) {
-        $this->id_reparation = $data['id_reparation'] ?? null;
+        $this->id_reparation = $data['id_reparation'];
         $this->id_taller = $data['id_taller'];
         $this->nombre_taller = $data['nombre_taller'];
         $this->fecha_registro = $data['fecha_registro'];
@@ -20,9 +20,12 @@ class Reparation {
     }
 
     public function getIdReparation() { return $this->id_reparation; }
+    public function setIdReparation($id_reparation) { $this->id_reparation = $id_reparation; }
     public function getIdTaller() { return $this->id_taller; }
     public function getNombreTaller() { return $this->nombre_taller; }
     public function getFechaRegistro() { return $this->fecha_registro; }
     public function getMatricula() { return $this->matricula; }
+    public function setMatricula($matricula) { $this->matricula = $matricula; }
     public function getFotoPath() { return $this->foto_path; }
+    public function setFotoPath($foto_path) { $this->foto_path = $foto_path; }
 }

@@ -1,60 +1,59 @@
 <?php
 namespace App\View;
 
-require '../../vendor/autoload.php';
+//require '../../vendor/autoload.php';
 
 use App\Config\Roles;
 use App\Model\Reparation;
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-    $_SESSION['optionRole'] = $_POST['optionRole'];
-}
-
-class ViewReparation {
-    public Reparation $reparation;
-
-    public function render($reparation) {
-        $this->reparation = $reparation;
-
-        echo '
-        <html>
-        <body>
-        <h1>Detalles de la reparación</h1>
-        <br>
-        <ul>
-        <li>ID de reparación: ' . $reparation->getIdReparation() . '</li>
-        <li>ID de la Workshop: ' . $reparation->getIdWorkshop() . '</li>
-        <li>Nombre del taller: ' . $reparation->getNameWorkshop() . '</li>
-        <li>Fecha de registro: ' . $reparation->getRegisterDate() . '</li>
-        <li>Matricula: ' . $reparation->getLicensePlate() . '</li>
-        </ul>
-        <br>
-        <img src="data:image/png;base64,' . base64_encode($reparation->getPhotoVehicle()) . '" alt="Image" />
-        </body>
-        </html>
-        ';
-    }
-
-}
 ?>
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewReparation</title>
+</head>
 <body>
     <h1>Car Workshop: Menú de reparación</h1>
-
-    <form method="GET" action="../Controller/ControllerReparation.php" name="formSearchReparation">
-        <h2>Buscar reparación de coche</h2>
-        
-        <label for="uuid">ID de reparación: </label>
-        <input type="text" id="uuid" name="uuid" required><br><br>
+    <form action="../Controller/ControllerReparation.php" method="POST">
+        <label for="idReparation">ID de reparación:</label>
+        <input type="text" id="idReparation" name="idReparation" required>
+    
         <input type="submit" value="Buscar" name="getReparation">
     </form>
+
     <?php
+    class ViewReparation {
+
+        function render(Reparation | null $result) {
+            if ($result != null) {
+                echo "<h1>Detalles de la reparación</h1><br>";
+                echo "<ul>
+                <li>ID de reparación: " . $result->getIdReparation() . "</li>
+                <li>ID de la Workshop: " . $result->getIdWorkshop() . "</li>
+                <li>Nombre del taller: " . $result->getNameWorkshop() . "</li>
+                <li>Fecha de registro: " . $result->getRegisterDate() . "</li>
+                <li>Matricula: " . $result->getLicensePlate() . "</li>
+                </ul><br>";
+                echo '<img src="data:image/png;base64,' . $result->getPhotoVehicle() . '" alt="Vehicle Image">';
+            } else {
+                echo "<h1>Reparación no encontrada</h1>";
+            }
+        }
+    }
+
+    ?>
     
-    if (isset($_POST["optionRole"]) && $_POST["optionRole"] == Roles::ROLE_EMPLOYEE) {?>
-    <form method="POST" action="../Controller/ControllerReparation.php" name="formSearchReparation" enctype="multipart/form-data">
+    <?php
+    session_start();
+    $_SESSION["role"] = $_GET["role"] ?? $_SESSION["role"] ?? null;
+        if($_SESSION["role"] == "employee") {
+        ?>
         <h2>Registrar reparación de coche:</h2>
+        <form action="../Controller/ControllerReparation.php" method="POST" name="formSearchReparation" enctype="multipart/form-data">
+                
         <label for="workshopId">ID del Taller:</label>
         <input type="text" id="workshopId" name="workshopId" maxlength="4" required><br><br>
 
@@ -73,6 +72,8 @@ class ViewReparation {
         <input type="submit" value="create" name="insertReparation">
     </form>
     <?php
-    } ?>
+        }
+    ?>
+
 </body>
 </html>
