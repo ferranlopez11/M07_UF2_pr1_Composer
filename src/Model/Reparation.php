@@ -3,29 +3,64 @@
 namespace App\Model;
 
 class Reparation {
-    private $id_reparation;
-    private $id_taller;
-    private $nombre_taller;
-    private $fecha_registro;
+    private $idReparacion;
+    private $idTaller;
+    private $nombreTaller;
+    private $fechaRegistro;
     private $matricula;
-    private $foto_path;
+    private $fotoPath;
 
-    public function __construct($data) {
-        $this->id_reparation = $data['id_reparation'];
-        $this->id_taller = $data['id_taller'];
-        $this->nombre_taller = $data['nombre_taller'];
-        $this->fecha_registro = $data['fecha_registro'];
-        $this->matricula = $data['matricula'];
-        $this->foto_path = $data['foto_path'];
+    public function __construct($idReparacion, $idTaller, $nombreTaller, $fechaRegistro, $matricula, $fotoPath) {
+        $this->idReparacion = $idReparacion;
+        $this->idTaller = $idTaller;
+        $this->nombreTaller = $nombreTaller;
+        $this->fechaRegistro = $fechaRegistro;
+        $this->matricula = $matricula;
+        $this->fotoPath = $fotoPath;
     }
 
-    public function getIdReparation() { return $this->id_reparation; }
-    public function setIdReparation($id_reparation) { $this->id_reparation = $id_reparation; }
-    public function getIdTaller() { return $this->id_taller; }
-    public function getNombreTaller() { return $this->nombre_taller; }
-    public function getFechaRegistro() { return $this->fecha_registro; }
-    public function getMatricula() { return $this->matricula; }
-    public function setMatricula($matricula) { $this->matricula = $matricula; }
-    public function getFotoPath() { return $this->foto_path; }
-    public function setFotoPath($foto_path) { $this->foto_path = $foto_path; }
+    public function getIdReparacion() 
+    { 
+        return $this->idReparacion; 
+    }
+    public function setIdReparacion($idReparacion) 
+    { 
+        $this->idReparacion = $idReparacion;
+        return $this; 
+    }
+    
+    public function getIdTaller() 
+    { 
+        return $this->idTaller; 
+    }
+
+    public function getNombreTaller() 
+    { 
+        return $this->nombreTaller; 
+    }
+
+    public function getFechaRegistro() 
+    { 
+        return $this->fechaRegistro; 
+    }
+
+    public function getMatricula() 
+    { 
+        return $this->matricula; 
+    }
+    public function setMatricula($matricula) 
+    { 
+        $this->matricula = $matricula; 
+        return $this;
+    }
+
+    public function getFotoPath() 
+    { 
+        return $this->fotoPath; 
+    }
+    public function setFotoPath($fotoPath) 
+    { 
+        $this->fotoPath = $fotoPath; 
+        return $this;
+    }
 }

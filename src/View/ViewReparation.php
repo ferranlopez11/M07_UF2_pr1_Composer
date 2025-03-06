@@ -16,10 +16,10 @@ use App\Model\Reparation;
     <title>ViewReparation</title>
 </head>
 <body>
-    <h1>Car Workshop: Menú de reparación</h1>
+    <h2>Car Workshop: Menú de reparación</h2>
     <form action="../Controller/ControllerReparation.php" method="POST">
         <label for="idReparation">ID de reparación:</label>
-        <input type="text" id="idReparation" name="idReparation" required>
+        <input type="text" id="idReparation" name="idReparation">
     
         <input type="submit" value="Buscar" name="getReparation">
     </form>
@@ -29,15 +29,15 @@ use App\Model\Reparation;
 
         function render(Reparation | null $result) {
             if ($result != null) {
-                echo "<h1>Detalles de la reparación</h1><br>";
+                echo "<h2>Detalles de la reparación</h2><br>";
                 echo "<ul>
-                <li>ID de reparación: " . $result->getIdReparation() . "</li>
-                <li>ID de la Workshop: " . $result->getIdWorkshop() . "</li>
-                <li>Nombre del taller: " . $result->getNameWorkshop() . "</li>
-                <li>Fecha de registro: " . $result->getRegisterDate() . "</li>
-                <li>Matricula: " . $result->getLicensePlate() . "</li>
+                <li>ID de reparación: " . $result->getIdReparacion() . "</li>
+                <li>ID de la Workshop: " . $result->getIdTaller() . "</li>
+                <li>Nombre del taller: " . $result->getNombreTaller() . "</li>
+                <li>Fecha de registro: " . $result->getFechaRegistro() . "</li>
+                <li>Matricula: " . $result->getMatricula() . "</li>
                 </ul><br>";
-                echo '<img src="data:image/png;base64,' . $result->getPhotoVehicle() . '" alt="Vehicle Image">';
+                echo '<img src="data:image/png;base64,' . $result->getFotoPath() . '" alt="Vehicle Image">';
             } else {
                 echo "<h1>Reparación no encontrada</h1>";
             }

@@ -2,141 +2,159 @@
 
 namespace App\Service;
 
+require_once __DIR__ . '/../../vendor/autoload.php';
+
 use App\Model\Reparation;
 use App\Config\Roles;
 use Intervention\Image\ImageManager;
-use Ramsey\Uuid\Uuid;
-
+use mysqli;
+use Intervention\Image\Drivers\Gd\Driver;
+use Ramsey\Uuid\Nonstandard\Uuid;
+use App\Utils\LoggerManager;
+use Intervention\Image\Decoders\Base64ImageDecoder;
+use Intervention\Image\Typography\FontFactory;
+use Exception;
 
 
 class ServiceReparation {
-    private $db;
-    private $logger;
 
-    function getReparation($role, $idReparation): Reparation {
-        $stmt = $this->mysqli->prepare("SELECT * FROM reparation WHERE idReparation = ?");
-        $stmt->bind_param('s', $idReparation);
-        $stmt->execute();
+    function connect() {
+        $logger = LoggerManager::getLogger();
+        $db = parse_ini_file(__DIR__ . "/../../config/db_config.ini", true)["params_db_sql"];
 
-        $result = $stmt->get_result()->fetch_assoc();
-
-        $stmt->close();
-
-        $reparation = new Reparation(
-            $result['idReparation'],
-            $result['idWorkshop'],
-            $result['nameWorkshop'],
-            $result['registerDate'],
-            $result['licensePlate'],
-            $result['photoVehicle']
-        );
-
-        if ($role == Roles::ROLE_CLIENT) {
-            $managerImage = new \Intervention\Image\ImageManager();
-
-            $imageObject = $managerImage->make($result['photoVehicle']);
-            $imageObject->pixelate(20);
-            $imageObject->save("../../resources/outputImg/tmp.png");
-            $reparation->sethPhotoVehicle($imageObject);
-            $reparation->setLicensePlate("XXXX XXX");
-        }
-        return $reparation;
-    }
-
-    function insertReparation($workshopId, $workshopName, $registerDate, $licensePlate): Reparation {
-        $uuid4 = Uuid::uuid4();
-
-        $watermarkText = $licensePlate . "+" . $uuid4;
-
-        $managerImage = new \Intervention\Image\ImageManager();
-
-        $imageObject = $managerImage->make($_FILES["photo"]["tmp_name"]);
-        $imageObject->save("../../resources/inputImg/" . $_FILES["photo"]["name"]);
-
-        $imageObject->text($watermarkText, 10, 20, function ($font) {
-            $font->file('../../resources/arial.ttf');
-            $font->size(30);
-            $font->color(array(0, 255, 0, 1));
-            $font->align('left');
-            $font->valign('top');
-        });
-
-        $imageObject->save(path: "../../resources/outputImg/" . $_FILES["photo"]["name"]);
-        $imageData = $imageObject;
-        $imageData = $this->mysqli->real_escape_string($imageData);
-
-        $reparation = new Reparation($uuid4, $workshopId, $workshopName, $registerDate, $licensePlate, $imageObject);
-
-        $sql_sentence = "INSERT INTO reparation(idReparation, idWorkshop, nameWorkshop, registerDate, licensePlate, photoVehicle)
-        VALUES('$uuid4', $workshopId, '$workshopName', '$registerDate', '$licensePlate', '$imageData')";
         try {
-            $this->mysqli->query($sql_sentence);
-            $this->log->info("Record inserted successfully");
-        } catch (\Throwable $th) {
-            $this->log->error("Error inserting a record" . $th->getMessage());
+            $mysqli = new mysqli($db["host"], $db["user"], $db["password"], $db["db_name"]);
+        } catch (Exception $e) {
+            $logger->error("Error connecting to the database" . $e->getMessage());
+            exit;
         }
-        $this->mysqli->close();
-
-        return $reparation;
+        return $mysqli;
     }
 
+    function getReparation($role, $idReparation) {
+        $logger = LoggerManager::getLogger();
 
-
-
-
-/*    public function __construct() {
-        // Crear instancia de Logger de Monolog
-        $this->logger = new Logger('ReparationService');
-        $this->logger->pushHandler(new StreamHandler(__DIR__ . '/../../logs/repair_log.log', Logger::DEBUG));  // Definir dónde almacenar los logs
-
-        $database = new Database();
-        $this->db = $database->connect();
-    }
-
-    // Método para insertar una reparación
-    public function insertReparation($data) {
         try {
-            $sql = "INSERT INTO Reparation (id_reparation, id_taller, nombre_taller, fecha_registro, matricula, foto_path) 
-                    VALUES (:id_reparation, :id_taller, :nombre_taller, :fecha_registro, :matricula, :foto_path)";
-            $stmt = $this->db->prepare($sql);
+            $conn = $this->connect();
+            $query = "SELECT * FROM workshop.reparation WHERE idReparation = ?";
+            $stmt = $conn->prepare($query);
 
-            $stmt->bindParam(':id_reparation', $data['id_reparation']);
-            $stmt->bindParam(':id_taller', $data['id_taller']);
-            $stmt->bindParam(':nombre_taller', $data['nombre_taller']);
-            $stmt->bindParam(':fecha_registro', $data['fecha_registro']);
-            $stmt->bindParam(':matricula', $data['matricula']);
-            $stmt->bindParam(':foto_path', $data['foto_path']);
-
-            $stmt->execute();
-            $this->logger->info("Reparación insertada exitosamente.", $data);  // Registrar en los logs
-            return true;
-        } catch (PDOException $e) {
-            // Registrar error en los logs
-            $this->logger->error("Error al insertar reparación: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    // Método para buscar una reparación por ID
-    public function getReparationById($id) {
-        try {
-            $sql = "SELECT * FROM Reparation WHERE id_reparation = :id_reparation";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':id_reparation', $id);
-            $stmt->execute();
-
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($result) {
-                return new Reparation($result);
-            } else {
-                $this->logger->warning("Reparación no encontrada con el ID: " . $id);  // Registrar advertencia
-                return null;  // No se encontró la reparación
+            if (!$stmt) {
+                throw new Exception("Error preparing the statement: " . $conn->error);
             }
-        } catch (PDOException $e) {
-            // Registrar error en los logs
-            $this->logger->error("Error al buscar reparación: " . $e->getMessage());
+
+            $stmt->bind_param('s', $idReparation);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $photoVehicle = $row['photoVehicle'];
+
+                if ($role === 'client' && $photoVehicle !== null) {
+                    $photoVehicle = $this->pixelateImage($photoVehicle);
+                }
+                if ($role === 'client' && $licenseVehicle !== null) {
+                    $licenseVehicle = str_repeat('*', strlen($licenseVehicle));
+                }
+
+                $reparation = new Reparation(
+                    $row['idReparation'],
+                    $row['idWorkshop'],
+                    $row['nameWorkshop'],
+                    $row['registerDate'],
+                    $row['licensePlate'],
+                    $photoVehicle
+                );
+
+                $logger->info("Record found successfully");
+                $stmt->close();
+                $conn->close();
+                return $reparation;
+            } else {
+                $logger->warning("Record not found");
+                $stmt->close();
+                $conn->close();
+                return null;
+            }
+        } catch (Exception $e) {
+            $logger->error("Error getting the record: " . $e->getMessage());
+            exit;
+        }
+    }
+
+    function insertReparation(Reparation $reparation) {
+        $logger = LoggerManager::getLogger();
+
+        try {
+            $conn = $this->connect();
+            $query = "INSERT INTO workshop.reparation(idReparation, idWorkshop, nameWorkshop, registerDate, licensePlate, photoVehicle) VALUES(?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($query);
+
+            if (!$stmt) {
+                $logger->error("Error preparing the statement: " . $conn->error);
+                echo "Error preparing the statement: " . $conn->error;
+                return false;
+            }
+
+            $idReparation = $this->generateUUID();
+            $idWorkshop = $reparation->getIdWorkshop();
+            $nameWorkshop = $reparation->getNameWorkshop();
+            $registerDate = $reparation->getRegisterDate();
+            $licensePlate = $reparation->getLicensePlate();
+            $photoVehicle = $reparation->getPhotoVehicle();
+            $photovehicleWaterMark = $this->addWatermark($photoVehicle, $licenseVehicle, $idReparation);
+
+            $stmt->bind_param('ssssss', $idReparation, $idWorkshop, $nameWorkshop, $registerDate, $licensePlate, $photovehicleWaterMark);
+            
+            if ($stmt->execute()) {
+                $reparation->setIdReparation($idReparation);
+                $photoVehicle = base64_encode($photoVehicle);
+                $logger->info("Record inserted successfully");
+                $stmt->close();
+                $conn->close();
+                return $reparation;
+            } else {
+                $logger->error("Error inserting the record: " . $conn->error);
+                $stmt->close();
+                $conn->close();
+                return null;
+            }
+
+        } catch (Exception $e) {
+            $logger->error("Error inserting the record: " . $e->getMessage());
+        }
+    }
+
+    function generateUUID() {
+        return Uuid::uuid4();
+    }
+
+    function pixelateImage($imageVehicle) {
+        if (!$imageVehicle) {
             return null;
         }
-    }*/
+
+        $imagePixelate = new ImageManager(new Driver());
+
+        $newImage = $imagePixelate->read($imageVehicle, Base64ImageDecoder::class);
+        $newImage->pixelate(20);
+
+        return base64_encode($newImage->encode());
+    }
+
+    function addWatermark($photo, $licensePlate, $idReparation) {
+        $manager = new ImageManager(new Driver);
+        $imageWithWatermark = $manager->read($photo, Base64ImageDecoder::class);
+
+        $imageWithWatermark->text($licensePlate . " , " . $idReparation, 20, 50, function (FontFactory $font) {
+            $font->size(30);
+            $font->color('#000000');
+            $font->align('center');
+            $font->valign('bottom');
+        });
+
+        return base64_encode($imageWithWatermark->encode());
+    }
+
 }
