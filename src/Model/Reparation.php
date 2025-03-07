@@ -3,64 +3,64 @@
 namespace App\Model;
 
 class Reparation {
-    private $idReparacion;
-    private $idTaller;
-    private $nombreTaller;
-    private $fechaRegistro;
-    private $matricula;
-    private $fotoPath;
+    private $idReparation;
+    private $idWorkshop;
+    private $nameWorkshop;
+    private $registerDate;
+    private $licenseVehicle;
+    private $photoVehicle;
 
-    public function __construct($idReparacion, $idTaller, $nombreTaller, $fechaRegistro, $matricula, $fotoPath) {
-        $this->idReparacion = $idReparacion;
-        $this->idTaller = $idTaller;
-        $this->nombreTaller = $nombreTaller;
-        $this->fechaRegistro = $fechaRegistro;
-        $this->matricula = $matricula;
-        $this->fotoPath = $fotoPath;
+    public function __construct($idReparation, $idWorkshop, $nameWorkshop, $registerDate, $licenseVehicle, $photoVehicle) {
+        $this->idReparation = $idReparation;
+        $this->idWorkshop = $idWorkshop;
+        $this->nameWorkshop = $nameWorkshop;
+        $this->registerDate = $registerDate;
+        $this->licenseVehicle = $licenseVehicle;
+        $this->photoVehicle = $photoVehicle;
     }
 
-    public function getIdReparacion() 
+    public function getIdReparation() 
     { 
-        return $this->idReparacion; 
+        return $this->idReparation; 
     }
-    public function setIdReparacion($idReparacion) 
+    public function setIdReparation($idReparation) 
     { 
-        $this->idReparacion = $idReparacion;
+        $this->idReparation = $idReparation;
         return $this; 
     }
     
-    public function getIdTaller() 
+    public function getIdWorkshop() 
     { 
-        return $this->idTaller; 
+        return $this->idWorkshop; 
     }
 
-    public function getNombreTaller() 
+    public function getNameWorkshop() 
     { 
-        return $this->nombreTaller; 
+        return $this->nameWorkshop; 
     }
 
-    public function getFechaRegistro() 
+    public function getRegisterDate() 
     { 
-        return $this->fechaRegistro; 
+        return $this->registerDate; 
     }
 
-    public function getMatricula() 
+    public function getLicenseVehicle() 
     { 
-        return $this->matricula; 
+        return $this->licenseVehicle; 
     }
-    public function setMatricula($matricula) 
+    public function setLicenseVehicle($licenseVehicle) 
     { 
-        $this->matricula = $matricula; 
+        $this->licenseVehicle = $licenseVehicle; 
         return $this;
     }
 
-    public function getFotoPath() 
+    public function getPhotoVehicle() 
     { 
-        return $this->fotoPath; 
+        return $this->photoVehicle; 
     }
-    public function setFotoPath($fotoPath) 
+    public function setPhotoVehicle($photoVehicle) 
     { 
-        $this->fotoPath = $fotoPath; 
+        $this->photoVehicle = $photoVehicle; 
         return $this;
     }
 }

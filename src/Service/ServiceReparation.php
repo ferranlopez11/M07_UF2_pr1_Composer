@@ -5,7 +5,6 @@ namespace App\Service;
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use App\Model\Reparation;
-use App\Config\Roles;
 use Intervention\Image\ImageManager;
 use mysqli;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -31,6 +30,49 @@ class ServiceReparation {
         return $mysqli;
     }
 
+    function insertReparation(Reparation $reparation) {
+        $logger = LoggerManager::getLogger();
+
+        try {
+            $conn = $this->connect();
+            $query = "INSERT INTO workshop.reparation(idReparation, idWorkshop, nameWorkshop, registerDate, licenseVehicle, photoVehicle) VALUES(?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($query);
+
+            if (!$stmt) {
+                $logger->error("Error preparing the statement: " . $conn->error);
+                echo "Error preparing the statement: " . $conn->error;
+                return false;
+            }
+
+            $idReparation = $this->generateUUID();
+            $idWorkshop = $reparation->getIdWorkshop();
+            $nameWorkshop = $reparation->getNameWorkshop();
+            $registerDate = $reparation->getRegisterDate();
+            $licenseVehicle = $reparation->getLicenseVehicle();
+            $photoVehicle = $reparation->getPhotoVehicle();
+            //$photovehicleWaterMark = $this->addWatermark($photoVehicle, $licenseVehicle, $idReparation);
+
+            $stmt->bind_param('ssssss', $idReparation, $idWorkshop, $nameWorkshop, $registerDate, $licenseVehicle, $photovehicle);
+            
+            if ($stmt->execute()) {
+                $reparation->setIdReparation($idReparation);
+                //$photoVehicle = base64_encode($photoVehicle);
+                $logger->info("Record inserted successfully" . $reparation->getIdReparation());
+                $stmt->close();
+                $conn->close();
+                return $reparation;
+            } else {
+                $logger->error("Error inserting the record: " . $stmt->error);
+                $stmt->close();
+                $conn->close();
+                return null;
+            }
+
+        } catch (Exception $e) {
+            $logger->error("Error inserting the record: " . $e->getMessage());
+        }
+    }
+
     function getReparation($role, $idReparation) {
         $logger = LoggerManager::getLogger();
 
@@ -50,9 +92,10 @@ class ServiceReparation {
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
                 $photoVehicle = $row['photoVehicle'];
+                $licenseVehicle = $row['licenseVehicle'];
 
                 if ($role === 'client' && $photoVehicle !== null) {
-                    $photoVehicle = $this->pixelateImage($photoVehicle);
+                    //$photoVehicle = $this->pixelateImage($photoVehicle);
                 }
                 if ($role === 'client' && $licenseVehicle !== null) {
                     $licenseVehicle = str_repeat('*', strlen($licenseVehicle));
@@ -63,7 +106,7 @@ class ServiceReparation {
                     $row['idWorkshop'],
                     $row['nameWorkshop'],
                     $row['registerDate'],
-                    $row['licensePlate'],
+                    $licenseVehicle,
                     $photoVehicle
                 );
 
@@ -72,65 +115,23 @@ class ServiceReparation {
                 $conn->close();
                 return $reparation;
             } else {
-                $logger->warning("Record not found");
+                $logger->warning("Record not found for ID: " . $idReparation);
                 $stmt->close();
                 $conn->close();
                 return null;
             }
         } catch (Exception $e) {
-            $logger->error("Error getting the record: " . $e->getMessage());
+            $logger->warning("Error getting the record: " . $e->getMessage());
             exit;
         }
     }
 
-    function insertReparation(Reparation $reparation) {
-        $logger = LoggerManager::getLogger();
-
-        try {
-            $conn = $this->connect();
-            $query = "INSERT INTO workshop.reparation(idReparation, idWorkshop, nameWorkshop, registerDate, licensePlate, photoVehicle) VALUES(?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($query);
-
-            if (!$stmt) {
-                $logger->error("Error preparing the statement: " . $conn->error);
-                echo "Error preparing the statement: " . $conn->error;
-                return false;
-            }
-
-            $idReparation = $this->generateUUID();
-            $idWorkshop = $reparation->getIdWorkshop();
-            $nameWorkshop = $reparation->getNameWorkshop();
-            $registerDate = $reparation->getRegisterDate();
-            $licensePlate = $reparation->getLicensePlate();
-            $photoVehicle = $reparation->getPhotoVehicle();
-            $photovehicleWaterMark = $this->addWatermark($photoVehicle, $licenseVehicle, $idReparation);
-
-            $stmt->bind_param('ssssss', $idReparation, $idWorkshop, $nameWorkshop, $registerDate, $licensePlate, $photovehicleWaterMark);
-            
-            if ($stmt->execute()) {
-                $reparation->setIdReparation($idReparation);
-                $photoVehicle = base64_encode($photoVehicle);
-                $logger->info("Record inserted successfully");
-                $stmt->close();
-                $conn->close();
-                return $reparation;
-            } else {
-                $logger->error("Error inserting the record: " . $conn->error);
-                $stmt->close();
-                $conn->close();
-                return null;
-            }
-
-        } catch (Exception $e) {
-            $logger->error("Error inserting the record: " . $e->getMessage());
-        }
-    }
 
     function generateUUID() {
-        return Uuid::uuid4();
+        return Uuid::uuid4()->toString();
     }
 
-    function pixelateImage($imageVehicle) {
+    /*function pixelateImage($imageVehicle) {
         if (!$imageVehicle) {
             return null;
         }
@@ -155,6 +156,6 @@ class ServiceReparation {
         });
 
         return base64_encode($imageWithWatermark->encode());
-    }
+    }*/
 
 }
